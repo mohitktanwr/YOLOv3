@@ -1,0 +1,86 @@
+# clone darknet repo
+!git clone https://github.com/AlexeyAB/darknet
+
+from google.colab import drive
+drive.mount('/content/drive')
+
+# change makefile to have GPU and OPENCV enabled
+%cd darknet
+!sed -i 's/OPENCV=0/OPENCV=1/' Makefile
+!sed -i 's/GPU=0/GPU=1/' Makefile
+!sed -i 's/CUDNN=0/CUDNN=1/' Makefile
+
+# verify CUDA
+!/usr/local/cuda/bin/nvcc --version
+
+# make darknet (build)
+!make
+
+!ls
+
+#mount your google drive
+%cd ..
+from google.colab import drive
+drive.mount('/content/gdrive')
+
+# this creates a symbolic link so that now the path /content/gdrive/My\ Drive/ is equal to /mydrive
+!ln -s /content/gdrive/My\ Drive/ /mydrive
+!ls /mydrive
+
+# functions to show after prediction
+def imShow(path):
+  import cv2
+  import matplotlib.pyplot as plt
+  %matplotlib inline
+
+  image = cv2.imread(path)
+  height, width = image.shape[:2]
+  resized_image = cv2.resize(image,(3*width, 3*height), interpolation = cv2.INTER_CUBIC)
+
+  fig = plt.gcf()
+  fig.set_size_inches(18, 10)
+  plt.axis("off")
+  plt.imshow(cv2.cvtColor(resized_image, cv2.COLOR_BGR2RGB))
+  plt.show()
+
+
+#function to upload files from local system
+def upload():
+  from google.colab import files
+  uploaded_file = files.upload()
+  for name , data in uploaded_file.items():
+    with open (name, 'wb') as f:
+      f.write(data)
+      print('saved file', name)
+  
+#Function to download file from colab to local system
+def download(path):
+  from google.colab import files
+  files.download(path)
+
+# copy the .zip file into the root directory of cloud VM
+!cp /mydrive/custom_YOLOFinal/test.zip ../
+
+# unzip the zip file and its contents should now be in /darknet/data/obj
+!unzip ../test.zip -d /content/darknet/data/
+
+# copy the .zip file into the root directory of cloud VM
+!cp /mydrive/custom_YOLOFinal/obj.zip ../
+
+# unzip the zip file and its contents should now be in /darknet/data/obj
+!unzip ../obj.zip -d /content/darknet/data/
+
+%cd darknet
+
+#upload the custom cfg file to cloud VM
+!cp /mydrive/custom_YOLOFinal/yolov3_custom.cfg cfg/
+
+#upload the name and data file to darknet/data folder
+!cp /mydrive/custom_YOLOFinal/obj.names data/
+!cp /mydrive/custom_YOLOFinal/obj.data data/
+
+# upload the script.py script to cloud VM from Google Drive
+!cp /mydrive/custom_YOLOFinal/script.py ./
+
+#run the script.py and it will create a train.txt(having realtive path of all images and .txt file) file in darkent/data/ 
+!python script.py
