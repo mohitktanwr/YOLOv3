@@ -16,6 +16,9 @@ drive.mount('/content/drive')
 # make darknet (build)
 !make
 
+#download yolov3 pre-trained weights
+!wget https://pjreddie.com/media/files/yolov3.weights
+
 !ls
 
 #mount your google drive
@@ -84,3 +87,41 @@ def download(path):
 
 #run the script.py and it will create a train.txt(having realtive path of all images and .txt file) file in darkent/data/ 
 !python script.py
+
+!cp /mydrive/custom_YOLOFinal/script2.py ./
+
+#run the script.py and it will create a train.txt(having realtive path of all images and .txt file) file in darkent/data/ 
+!python script2.py
+
+#see the generated train.txt file
+!ls data/
+
+# upload pretrained convolutional layer weights
+!wget http://pjreddie.com/media/files/darknet53.conv.74
+
+# train your custom detector
+!./darknet detector train data/obj.data cfg/yolov3_custom.cfg darknet53.conv.74 -dont_show
+
+# uncomment it and run to restart your model training from the last iteration it crashed
+
+!./darknet detector train data/obj.data cfg/yolov3_custom.cfg /mydrive/custom_YOLOFinal/yolov3_custom_last.weights -dont_show
+
+#change the custom cfg file from training mode to testing mode for testing the newely generated weighted file
+
+%cd cfg
+!sed -i 's/batch=64/batch=1/' yolov3_custom.cfg
+!sed -i 's/subdivisions=16/subdivisions=1/' yolov3_custom.cfg
+%cd ..
+
+#command for detection with new weighted file
+
+!./darknet detector test data/obj.data cfg/yolov3_custom.cfg /mydrive/custom_YOLOFinal/yolov3_custom_final.weights /mydrive/Test_images/x27.jpg #-thresh 0.3
+imShow('predictions.jpg')
+
+#command for detection with new weighted file
+
+!./darknet detector map data/obj.data cfg/yolov3_custom.cfg /mydrive/custom_YOLO/yolov3_custom_2000.weights -thresh 0.5 #/mydrive/images/cov_images/700.jpg -thresh 0.3
+
+#command for detection with new weighted file
+
+!./darknet detector map data/obj.data cfg/yolov3_custom.cfg /mydrive/custom_YOLO/yolov3_custom_1000.weights #/mydrive/images/cov_images/700.jpg -thresh 0.3
